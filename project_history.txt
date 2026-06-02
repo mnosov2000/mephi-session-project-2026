@@ -1,0 +1,47 @@
+    1  ping -c 4 8.8.8.8 > /tmp/network_check.txt
+    2  ping -c 4 10.0.2.2 >> /tmp/network_check.txt
+    3  dnf install -y nginx tcpdump libcap-ng-utils policycoreutils-python-utils
+    4  cd /tmp
+    5  dnf download tcpdump
+    6  rpm -ivh --replacepkgs --force tcpdump-*.rpm
+    7  nmcli connection modify enp0s3 ipv4.addresses 10.0.2.15/24 ipv4.gateway 10.0.2.2 ipv4.dns 8.8.8.8 ipv4.method manual
+    8  nmcli connection up enp0s3
+    9  sed -i 's|root         /usr/share/nginx/html;|root         /data/mephi-web;|g' /etc/nginx/nginx.conf
+   10  systemctl enable --now nginx
+   11  journalctl -u nginx --since "5 minutes ago" > /tmp/nginx_recent_logs.txt
+   12  groupadd mephi-devs
+   13  useradd mephi-admin
+   14  usermod -aG mephi-devs mephi-admin
+   15  echo "mephi-admin:P@ssw0rd2026" | chpasswd
+   16  chown mephi-admin:mephi-devs /data/mephi-web
+   17  chmod 2775 /data/mephi-web
+   18  setenforce 1
+   19  semanage fcontext -a -t httpd_sys_content_t "/data/mephi-web(/.*)?"
+   20  restorecon -Rv /data/mephi-web
+   21  chmod u-s /usr/sbin/tcpdump
+   22  setcap 'cap_net_raw,cap_net_admin+ep' /usr/sbin/tcpdump
+   23  sudo -u mephi-admin tcpdump --help
+   24  echo "Hello from Student: M2551054" > /data/mephi-web/index.html
+   25  chown mephi-admin:mephi-devs /data/mephi-web/index.html
+   26  curl http://localhost
+   27  curl http://10.0.2.15
+   28  echo "root" > /etc/ssh/denied_users
+   29  sed -i '2i auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed' /etc/pam.d/sshd
+   30  sed -i '2i auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed' /etc/pam.d/login
+   31  hostnamectl set-hostname mephi-2026.domain.local
+   32  sed -i 's/^SELINUX=.*/SELINUX=enforcing/g' /etc/selinux/config
+   33  sed -i '2i account required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed' /etc/pam.d/sshd
+   34  sed -i 's/.*PermitRootLogin.*/PermitRootLogin no/g' /etc/ssh/sshd_config
+   35  systemctl restart sshd
+   36  sed -i 's/defaults 0 2/defaults,nofail 0 2/g' /etc/fstab
+   37  systemctl restart nginx
+   38  journalctl -u nginx --since "5 minutes ago" > ~/github_files/nginx_recent_logs.txt
+   39  cp /etc/fstab ~/github_files/fstab.txt
+   40  getenforce > ~/github_files/selinux_status.txt
+   41  ls -Zd /data/mephi-web > ~/github_files/file_contexts.txt
+   42  getcap /usr/sbin/tcpdump > ~/github_files/tcpdump_capabilities.txt
+   43  stat /data/mephi-web > ~/github_files/permissions.txt
+   44  id mephi-admin > ~/github_files/users_groups.txt
+   45  getent group mephi-devs >> ~/github_files/users_groups.txt
+   46  curl -s http://10.0.2.15 > ~/github_files/curl_output.txt
+   47  history > ~/github_files/project_history.txt
